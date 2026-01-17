@@ -1,8 +1,14 @@
-FROM debian:bullseye
+FROM debian:bookworm
 
-# Install dependencies
+# Install dependencies including Redis client and PHP Redis extension
 RUN apt-get update && apt-get install -y \
-    php-fpm php-mysql curl tar \
+    php8.2-fpm \
+    php8.2-mysql \
+    php8.2-redis \
+    curl \
+    tar \
+    mariadb-client \
+    redis-tools \
     && rm -rf /var/lib/apt/lists/*
 
 # Create the target directory
@@ -16,15 +22,11 @@ RUN curl -o wordpress.tar.gz https://wordpress.org/latest.tar.gz \
 # Ensure www-data owns WordPress files
 RUN chown -R www-data:www-data /var/www/wordpress
 
-RUN apt-get update && apt-get install -y \
-    php-redis \
-    && rm -rf /var/lib/apt/lists/*
-
 # Configure PHP-FPM to run in foreground
-RUN sed -i 's/;daemonize = yes/daemonize = no/' /etc/php/*/fpm/php-fpm.conf
+RUN sed -i 's/;daemonize = yes/daemonize = no/' /etc/php/8.2/fpm/php-fpm.conf
 
 # Copy custom PHP-FPM pool config
-COPY conf/www.conf /etc/php/*/fpm/pool.d/www.conf
+COPY conf/www.conf /etc/php/8.2/fpm/pool.d/www.conf
 
 # Copy entrypoint
 COPY tools/entrypoint.sh /usr/local/bin/entrypoint.sh

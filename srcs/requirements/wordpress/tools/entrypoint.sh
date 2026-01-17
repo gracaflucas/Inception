@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# Load DB credentials from Docker secrets or environment variables
+# Load DB credentials from Docker secrets
 if [ -f "/run/secrets/db_password" ]; then
     DB_PASSWORD=$(cat /run/secrets/db_password)
 fi
@@ -30,18 +30,4 @@ fi
 chown -R www-data:www-data /var/www/wordpress
 
 # Start PHP-FPM in foreground
-exec php-fpm7.4 -F
-
-
-# chown -R www-data:www-data * ( for redis )
-# sed -i "41 i define( 'WP_REDIS_HOST', 'redis' );\ndefine( 'WP_REDIS_PORT', '6379' );\n" wp-config.php
-
-
-# #!/bin/bash
-# set -e
-
-# # Adjust permissions
-# chown -R www-data:www-data /var/www/html
-
-# # Start PHP-FPM in foreground
-# exec php-fpm7.4 -F
+exec php-fpm8.2 -F
