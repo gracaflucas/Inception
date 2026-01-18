@@ -1,8 +1,12 @@
 FROM debian:bookworm
 
-# Install dependencies
+# Install dependencies (ADD mariadb-client!)
 RUN apt-get update && apt-get install -y \
-    php8.2-fpm php-mysql curl tar \
+    php8.2-fpm \
+    php8.2-mysql \
+    mariadb-client \
+    curl \
+    tar \
     && rm -rf /var/lib/apt/lists/*
 
 # Create the target directory
@@ -31,32 +35,3 @@ WORKDIR /var/www/wordpress
 EXPOSE 9000
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-
-
-
-# FROM debian:bullseye
-
-# # Install PHP-FPM, extensions, and dependencies
-# RUN apt-get update && apt-get install -y \
-#     php-fpm php-mysql php-cli php-gd php-curl php-xml php-mbstring wget tar curl \
-#     mariadb-client \
-#     && rm -rf /var/lib/apt/lists/*
-
-# # Set working directory
-# WORKDIR /var/www/html
-
-# # Download and extract WordPress
-# RUN curl -o wordpress.tar.gz https://wordpress.org/latest.tar.gz \
-#     && tar -xzf wordpress.tar.gz --strip-components=1 \
-#     && rm wordpress.tar.gz
-
-# # Copy PHP-FPM pool configuration
-# COPY www.conf /etc/php/7.4/fpm/pool.d/www.conf
-
-# # Copy entrypoint
-# COPY entrypoint.sh /entrypoint.sh
-# RUN chmod +x /entrypoint.sh
-
-# EXPOSE 9000
-
-# ENTRYPOINT ["/entrypoint.sh"]

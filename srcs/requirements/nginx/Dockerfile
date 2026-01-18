@@ -21,23 +21,3 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 EXPOSE 443
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-
-# FROM debian:bullseye
-
-# # Install NGINX and OpenSSL
-# RUN apt-get update && apt-get install -y \
-#     nginx openssl \
-#     && rm -rf /var/lib/apt/lists/*
-
-# # Create SSL directory
-# RUN mkdir -p /etc/nginx/ssl
-
-# # Copy configuration and entrypoint
-# COPY nginx.conf /etc/nginx/nginx.conf
-# COPY entrypoint.sh /entrypoint.sh
-# RUN chmod +x /entrypoint.sh
-
-# EXPOSE 443
-
-# ENTRYPOINT ["/entrypoint.sh"]
-

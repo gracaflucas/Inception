@@ -70,28 +70,3 @@ secrets:
     file: ../secrets/db_root_password.txt
   db_password:
     file: ../secrets/db_password.txt
-
-
-# volumes:
-#   mariadb_data:
-#     driver: local
-#     driver_opts:
-#       type: none
-#       device: /home/lucas/data/mariadb
-#       o: bind
-
-#   wordpress_data:
-#     driver: local
-#     driver_opts:
-#       type: none
-#       device: /home/lucas/data/wordpress
-#       o: bind
-
-# services:
-#   mariadb:
-#     volumes:
-#       - mariadb_data:/var/lib/mysql
-
-#   wordpress:
-#     volumes:
-#       - wordpress_data:/var/www/wordpress

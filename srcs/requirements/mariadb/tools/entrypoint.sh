@@ -1,57 +1,73 @@
 #!/bin/bash
 set -e
 
-# Secrets
-DB_ROOT_PASSWORD=$(cat /run/secrets/db_root_password)
-DB_PASSWORD=$(cat /run/secrets/db_password)
+# Read secrets
+if [ -f "/run/secrets/db_root_password" ]; then
+    DB_ROOT_PASSWORD=$(cat /run/secrets/db_root_password)
+else
+    echo "ERROR: db_root_password secret not found!"
+    exit 1
+fi
 
-# Env vars (from .env file)
+if [ -f "/run/secrets/db_password" ]; then
+    DB_PASSWORD=$(cat /run/secrets/db_password)
+else
+    echo "ERROR: db_password secret not found!"
+    exit 1
+fi
+
+# Env vars
 DB_NAME=${MYSQL_DATABASE}
 DB_USER=${MYSQL_USER}
 
-# Start MariaDB in safe mode for initialization
-mysqld_safe --skip-networking &
+echo "Starting MariaDB initialization..."
+echo "Database: $DB_NAME"
+echo "User: $DB_USER"
+
+# Initialize database if needed
+if [ ! -d "/var/lib/mysql/mysql" ]; then
+    echo "Initializing database..."
+    mysql_install_db --user=mysql --datadir=/var/lib/mysql
+fi
+
+# Start MariaDB temporarily for setup
+echo "Starting temporary MariaDB..."
+mysqld_safe --skip-networking --datadir=/var/lib/mysql &
 pid="$!"
 
-# Wait for server startup
-until mysqladmin ping >/dev/null 2>&1; do
-  echo "Waiting for MariaDB to be ready..."
-  sleep 2
+# Wait for MariaDB to start
+echo "Waiting for MariaDB to be ready..."
+for i in {1..30}; do
+    if mysqladmin ping -h localhost --silent 2>/dev/null; then
+        echo "MariaDB is ready!"
+        break
+    fi
+    if [ $i -eq 30 ]; then
+        echo "ERROR: MariaDB failed to start"
+        exit 1
+    fi
+    sleep 1
 done
 
-# Create DB + user if not exists
-mysql -uroot <<-EOSQL
-  CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;
-  CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${DB_PASSWORD}';
-  GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'%';
-  ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_ROOT_PASSWORD}';
-  FLUSH PRIVILEGES;
+# Create database and user
+echo "Creating database and user..."
+mysql -u root <<-EOSQL
+    CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;
+    CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${DB_PASSWORD}';
+    GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'%';
+    ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_ROOT_PASSWORD}';
+    FLUSH PRIVILEGES;
 EOSQL
 
+echo "Database setup complete!"
+
 # Shutdown temporary MariaDB
-mysqladmin -uroot -p"${DB_ROOT_PASSWORD}" shutdown
+echo "Shutting down temporary instance..."
+mysqladmin -u root -p"${DB_ROOT_PASSWORD}" shutdown
 
-# Exec to run mariadb as PID 1
-exec mysqld_safe
+# Wait for shutdown
+wait $pid
 
-
-
-# #!/bin/bash
-# set -e
-
-# # Start MariaDB service in background
-# mysqld_safe &
-
-# # Wait for MariaDB to start
-# sleep 5
-
-# # Create database and user if not exists
-# mysql -u root <<-EOSQL
-#     CREATE DATABASE IF NOT EXISTS wordpress;
-#     CREATE USER IF NOT EXISTS 'wp_user'@'%' IDENTIFIED BY 'wp_password';
-#     GRANT ALL PRIVILEGES ON wordpress.* TO 'wp_user'@'%';
-#     FLUSH PRIVILEGES;
-# EOSQL
-
-# # Bring MariaDB to foreground
-# wait
+# Start MariaDB normally
+echo "Starting MariaDB..."
+exec mysqld_safe --datadir=/var/lib/mysql
