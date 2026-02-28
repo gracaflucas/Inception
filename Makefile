@@ -7,6 +7,8 @@ build:
 
 # Start services
 up: build
+	@mkdir -p /home/lufiguei/data/mariadb
+	@mkdir -p /home/lufiguei/data/wordpress
 	docker compose -f srcs/docker-compose.yml --env-file srcs/.env up -d
 	@echo ""
 	@echo "✓ Services started!"
@@ -16,14 +18,17 @@ up: build
 down:
 	docker compose -f srcs/docker-compose.yml --env-file srcs/.env down
 
-# Remove volumes
+# Remove images only
 clean: down
-	docker volume rm srcs_wordpress_data srcs_mariadb_data 2>/dev/null || true
-
-# Full cleanup
-fclean: clean
-	docker compose -f srcs/docker-compose.yml --env-file srcs/.env down --rmi all --volumes --remove-orphans
+	docker compose -f srcs/docker-compose.yml --env-file srcs/.env down --rmi all
 	docker system prune -f
+
+# Full cleanup - remove images AND volumes
+fclean: down
+	@sudo rm -rf /home/lufiguei/data/mariadb
+	@sudo rm -rf /home/lufiguei/data/wordpress
+	docker compose -f srcs/docker-compose.yml --env-file srcs/.env down --rmi all --volumes --remove-orphans
+	docker system prune -af --volumes
 
 # Rebuild everything from scratch
 re: fclean all
@@ -40,11 +45,12 @@ status:
 help:
 	@echo "Available targets:"
 	@echo "  make up      - Build and start services"
-	@echo "  make down    - Stop services"
+	@echo "  make down    - Stop services (data persists)"
 	@echo "  make re      - Full rebuild from scratch"
-	@echo "  make clean   - Stop and remove volumes"
-	@echo "  make fclean  - Full cleanup (images + volumes + orphans)"
+	@echo "  make clean   - Stop and remove images only (data persists)"
+	@echo "  make fclean  - Full cleanup (images + volumes + data)"
 	@echo "  make logs    - Follow logs"
 	@echo "  make status  - Show running containers"
 
 .PHONY: all build up down clean fclean re logs status help
+

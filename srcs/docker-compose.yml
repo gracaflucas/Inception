@@ -1,7 +1,6 @@
-version: "3.9"
-
 services:
   mariadb:
+    image: mariadb
     build:
       context: ./requirements/mariadb
       dockerfile: Dockerfile
@@ -19,6 +18,7 @@ services:
       - db_password
 
   wordpress:
+    image: wordpress
     build:
       context: ./requirements/wordpress
       dockerfile: Dockerfile
@@ -45,6 +45,7 @@ services:
       - db_root_password
 
   nginx:
+    image: nginx
     build:
       context: ./requirements/nginx
       dockerfile: Dockerfile
@@ -65,11 +66,20 @@ networks:
 
 volumes:
   mariadb_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/${LOGIN}/data/mariadb
   wordpress_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/${LOGIN}/data/wordpress
 
 secrets:
   db_root_password:
     file: ../secrets/db_root_password.txt
   db_password:
     file: ../secrets/db_password.txt
-
