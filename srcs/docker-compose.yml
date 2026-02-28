@@ -10,10 +10,8 @@ services:
     networks:
       - inception
     environment:
-      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
       MYSQL_DATABASE: wordpress
       MYSQL_USER: wp_user
-      MYSQL_PASSWORD_FILE: /run/secrets/db_password
     volumes:
       - mariadb_data:/var/lib/mysql
     secrets:
@@ -33,14 +31,18 @@ services:
     environment:
       MYSQL_DATABASE: wordpress
       MYSQL_USER: wp_user
-      MYSQL_PASSWORD_FILE: /run/secrets/db_password
       MYSQL_HOST: mariadb
+      DOMAIN_NAME: ${DOMAIN_NAME}
+      WP_TITLE: ${WP_TITLE}
+      WP_ADMIN_USER: ${WP_ADMIN_USER}
+      WP_ADMIN_EMAIL: ${WP_ADMIN_EMAIL}
+      WP_USER: ${WP_USER}
+      WP_USER_EMAIL: ${WP_USER_EMAIL}
     volumes:
       - wordpress_data:/var/www/wordpress
-    ports:
-      - "8000:9000"
     secrets:
       - db_password
+      - db_root_password
 
   nginx:
     build:
@@ -70,3 +72,4 @@ secrets:
     file: ../secrets/db_root_password.txt
   db_password:
     file: ../secrets/db_password.txt
+

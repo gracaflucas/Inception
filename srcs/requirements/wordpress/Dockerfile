@@ -1,6 +1,5 @@
 FROM debian:bookworm
 
-# Install dependencies (ADD mariadb-client!)
 RUN apt-get update && apt-get install -y \
     php8.2-fpm \
     php8.2-mysql \
@@ -8,6 +7,10 @@ RUN apt-get update && apt-get install -y \
     curl \
     tar \
     && rm -rf /var/lib/apt/lists/*
+
+# Install WP-CLI
+RUN curl -o /usr/local/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
+    && chmod +x /usr/local/bin/wp
 
 # Create the target directory
 RUN mkdir -p /var/www/wordpress
@@ -35,3 +38,4 @@ WORKDIR /var/www/wordpress
 EXPOSE 9000
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
